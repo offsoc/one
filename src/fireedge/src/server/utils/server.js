@@ -234,7 +234,7 @@ const middlewareValidateAuthWebsocket = (
  */
 const encrypt = (data = '', encryptKey = '', iv = '') => {
   let rtn
-  if (data && encryptKey && iv) {
+  if (data && encryptKey) {
     try {
       const cipher = iv
         ? createCipheriv(defaultTypeCrypto, encryptKey, iv)
@@ -266,7 +266,7 @@ const encrypt = (data = '', encryptKey = '', iv = '') => {
  */
 const decrypt = (data = '', decryptKey = '', iv = '') => {
   let rtn
-  if (data && decryptKey && iv) {
+  if (data && decryptKey) {
     try {
       const cipher = iv
         ? createDecipheriv(defaultTypeCrypto, decryptKey, iv)
@@ -583,6 +583,9 @@ const genPathResources = () => {
     }
     if (!global.paths.VMM_EXEC_CONFIG) {
       global.paths.VMM_EXEC_CONFIG = `${ETC_LOCATION}/vmm_exec`
+    }
+    if (!global.paths.OS_PROFILES) {
+      global.paths.OS_PROFILES = `${ETC_LOCATION}/${defaultSunstonePath}/profiles`
     }
     if (!global.paths.FIREEDGE_KEY_PATH) {
       global.paths.FIREEDGE_KEY_PATH = `${VAR_LOCATION}/.one/${defaultKeyFilename}`

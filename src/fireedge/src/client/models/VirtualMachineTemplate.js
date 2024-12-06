@@ -13,25 +13,12 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ThemeOptions } from '@mui/material'
+import { VmTemplate } from 'client/constants'
 
-/** @type {ThemeOptions} Provision theme */
-export default {
-  palette: {
-    secondary: {
-      100: '#ffeae4',
-      200: '#ffd6c8',
-      300: '#ffc1ad',
-      400: '#ffac91',
-      500: '#fe9876',
-      600: '#fe835a',
-      700: '#fe6f3f',
-      800: '#fe5a23',
-      900: '#e74a15',
-      light: '#ffd6c8',
-      main: '#fe835a',
-      dark: '#fe5a23',
-      contrastText: '#fff',
-    },
-  },
-}
+import { getLocked } from 'client/utils'
+
+/**
+ * @param {VmTemplate} vmTemplate - Virtual machine template
+ * @returns {string} - Return if virtual machine template is locked/unlocked
+ */
+export const getVMTemplateLocked = getLocked

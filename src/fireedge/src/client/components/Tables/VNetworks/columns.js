@@ -15,7 +15,11 @@
  * ------------------------------------------------------------------------- */
 import { Column } from 'react-table'
 
-import { getState, getVNManager } from 'client/models/VirtualNetwork'
+import {
+  getState,
+  getVNManager,
+  getVirtualNetLocked,
+} from 'client/models/VirtualNetwork'
 import { T } from 'client/constants'
 
 /** @type {Column[]} Virtual Network columns */
@@ -25,7 +29,12 @@ const COLUMNS = [
   { Header: T.State, id: 'state', accessor: (row) => getState(row)?.name },
   { Header: T.Owner, id: 'owner', accessor: 'UNAME' },
   { Header: T.Group, id: 'group', accessor: 'GNAME' },
-  { Header: T.Locked, id: 'locked', accessor: 'LOCK' },
+  {
+    Header: T.Locked,
+    id: 'locked',
+    accessor: getVirtualNetLocked,
+    translation: { true: T.Locked, false: T.Unlocked },
+  },
   { Header: T.Driver, id: 'vn_mad', accessor: getVNManager },
   {
     Header: T.Label,

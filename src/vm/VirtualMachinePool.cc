@@ -76,56 +76,8 @@ int VirtualMachinePool::update(PoolObjectSQL * objsql)
     return vm->update(db);
 };
 
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-int VirtualMachinePool::insert_index(const string& deploy_id, int vmid,
-                                     bool replace)
-{
-    ostringstream oss;
-    char *        deploy_name = db->escape_str(deploy_id);
-
-    if (deploy_name == 0)
-    {
-        return -1;
-    }
-
-    if (replace)
-    {
-        oss << "REPLACE ";
-    }
-    else
-    {
-        oss << "INSERT ";
-    }
-
-    oss << "INTO " << one_db::vm_import_table
-        << " (" << one_db::vm_import_db_names << ") "
-        << " VALUES ('" << deploy_name << "'," << vmid << ")";
-
-    db->free_str(deploy_name);
-
-    return db->exec_wr(oss);
-};
 
 /* -------------------------------------------------------------------------- */
-
-void VirtualMachinePool::drop_index(const string& deploy_id)
-{
-    ostringstream oss;
-    char *        deploy_name = db->escape_str(deploy_id);
-
-    if (deploy_name == 0)
-    {
-        return;
-    }
-
-    oss << "DELETE FROM " << one_db::vm_import_table << " WHERE deploy_id='"
-        << deploy_name << "'";
-
-    db->exec_wr(oss);
-}
-
 /* -------------------------------------------------------------------------- */
 
 int VirtualMachinePool::allocate(
@@ -139,40 +91,23 @@ int VirtualMachinePool::allocate(
         string&        error_str,
         bool           on_hold)
 {
-    string deploy_id;
-
     // ------------------------------------------------------------------------
     // Build a new Virtual Machine object
     // ------------------------------------------------------------------------
-    auto vm = new VirtualMachine(-1, uid, gid, uname, gname, umask, move(vm_template));
+    VirtualMachine vm {-1, uid, gid, uname, gname, umask, move(vm_template)};
 
     if ( _submit_on_hold == true || on_hold )
     {
-        vm->state = VirtualMachine::HOLD;
+        vm.state = VirtualMachine::HOLD;
 
-        vm->user_obj_template->replace("SUBMIT_ON_HOLD", true);
+        vm.user_obj_template->replace("SUBMIT_ON_HOLD", true);
     }
     else
     {
-        vm->state = VirtualMachine::PENDING;
+        vm.state = VirtualMachine::PENDING;
     }
 
-    vm->prev_state = vm->state;
-
-    vm->user_obj_template->get("DEPLOY_ID", deploy_id);
-
-    if (!deploy_id.empty())
-    {
-        vm->state = VirtualMachine::HOLD;
-
-        if (insert_index(deploy_id, -1, false) == -1) //Set import in progress
-        {
-            delete vm;
-
-            error_str = "Virtual Machine " + deploy_id + " already imported.";
-            return -1;
-        }
-    }
+    vm.prev_state = vm.state;
 
     // ------------------------------------------------------------------------
     // Insert the Object in the pool
@@ -183,18 +118,6 @@ int VirtualMachinePool::allocate(
     // ------------------------------------------------------------------------
     // Insert the deploy_id - vmid index for imported VMs
     // ------------------------------------------------------------------------
-
-    if (!deploy_id.empty())
-    {
-        if (*oid >= 0)
-        {
-            insert_index(deploy_id, *oid, true);
-        }
-        else
-        {
-            drop_index(deploy_id);
-        }
-    }
 
     if (*oid >= 0)
     {
@@ -485,38 +408,6 @@ VirtualMachineMonitorInfo VirtualMachinePool::get_monitoring(int vmid)
     }
 
     return info;
-}
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-int VirtualMachinePool::get_vmid(const string& deploy_id)
-{
-    int rc;
-    int vmid = -1;
-    ostringstream oss;
-
-    auto sql_id = db->escape_str(deploy_id);
-
-    single_cb<int> cb;
-
-    cb.set_callback(&vmid);
-
-    oss << "SELECT vmid FROM " << one_db::vm_import_table
-        << " WHERE deploy_id = '" << sql_id << "'";
-
-    rc = db->exec_rd(oss, &cb);
-
-    cb.unset_callback();
-
-    db->free_str(sql_id);
-
-    if (rc != 0 )
-    {
-        return -1;
-    }
-
-    return vmid;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -29,15 +29,12 @@ const apps = {
     name: appNameSunstone,
     assets: true,
   },
-  [appNameProvision]: {
-    name: appNameProvision,
-    theme: appNameProvision,
-  },
 }
 const default2FAOpennebulaVar = 'TWO_FACTOR_AUTH_SECRET'
 const defaultIp = 'localhost'
 const protocol = 'http'
 const defaults = {
+  defaultAppNameProvision: appNameProvision,
   defaultTypeCrypto: 'aes-256-cbc',
   /**
    * Empty function.
@@ -190,6 +187,53 @@ const defaults = {
   /** HOOK OBJECT NAMES */
   hookObjectNames: {
     vn: 'net',
+  },
+  keysRDP: {
+    hostname: { key: 'full address:s:', value: '' },
+    username: { key: 'username:s:', value: '' },
+    password: { key: 'password 51:b:', value: '' },
+    port: { key: 'server port:i:', value: '' },
+    'server-layout': { key: 'keyboard layout:i:', value: '' },
+    'disable-audio': { key: 'audiomode:i:', value: 0 },
+    'enable-audio-input': { key: 'redirectaudiocapture:1:', value: 0 },
+    'enable-wallpaper': {
+      key: 'disable wallpaper:i:',
+      value: 0,
+      reverse: true,
+    },
+    'enable-theming': { key: 'disable themes:i:', value: 0, reverse: true },
+    'enable-font-smoothing': { key: 'allow font smoothing:i:', value: 1 },
+    'enable-full-window-drag': {
+      key: 'disable full window drag:i:',
+      value: 0,
+      reverse: true,
+    },
+    'enable-desktop-composition': {
+      key: 'allow desktop composition:i:',
+      value: 1,
+    },
+    'enable-menu-animations': {
+      key: 'disable menu anims:i:',
+      value: 0,
+      reverse: true,
+    },
+    'disable-bitmap-caching': {
+      key: 'bitmapcachepersistenable:i:',
+      value: 0,
+      reverse: true,
+    },
+    'disable-offscreen-caching': {
+      key: 'offscreen caching:i:',
+      value: 1,
+      reverse: true,
+    },
+    'disable-glyph-caching': { key: 'glyphcache:i:', value: 0, reverse: true },
+  },
+  keysVNC: {
+    hostname: { key: 'Host=', value: '' },
+    port: { key: 'Port=', value: '' },
+    username: { key: 'Username=', value: '' },
+    password: { key: 'Password=', value: '' },
   },
 }
 

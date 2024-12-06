@@ -19,6 +19,7 @@ require 'erb'
 require 'json'
 require 'open3'
 require 'resolv'
+require 'DriverLogger'
 
 module VNMMAD
 
@@ -51,7 +52,7 @@ module VNMMAD
                 # services by picking different service ports. At the same time it significantly
                 # simplifies tproxy implementation on HV machines.
                 if !(a.find {|item| item[:service_port] == opts[:service_port] }).nil?
-                    OpenNebula.log_warning "Ignoring tproxy duplicate: #{opts}"
+                    OpenNebula::DriverLogger.log_warning "Ignoring tproxy duplicate: #{opts}"
                     next
                 end
 
@@ -90,28 +91,23 @@ module VNMMAD
 
             ip_netns_exec(brdev, "ip route replace default dev #{brdev}a")
 
-            veth_mac = ip_netns_exec(brdev,
-                                     "ip -j link show dev #{brdev}a",
-                                     :expect_json => true).dig(0, 0, 'address')
-
-            # This is required to avoid 169.254.16.9 address conflicts in case of VNETs
-            # used on multiple different HV hosts are attached to multiple guest VMs.
-            # Basically, we short-circuit any 169.254.16.9 communication and
-            # forcefully redirect every packet destined to 169.254.16.9 to be handled
-            # locally (regardless of the actual ARP resolution in guest VMs).
+            # Prevent ARP requests from being propagated to other HV machines.
+            # It reduces network traffic and ensures that the closest HV handles
+            # proxied packets.
             nft(ERB.new(<<~NFT).result(binding))
                 table bridge one_tproxy {
                     chain ch_<%= brdev %> {
-                        type filter hook prerouting priority dstnat; policy accept;
+                        type filter hook forward priority filter; policy accept;
                     };
                 };
                 flush chain bridge one_tproxy ch_<%= brdev %>;
                 table bridge one_tproxy {
                     chain ch_<%= brdev %> {
                         meta ibrname "<%= brdev %>" \
-                        ip daddr 169.254.16.9 \
-                        meta pkttype set host ether daddr set <%= veth_mac %> \
-                        accept;
+                        oifname != "<%= brdev %>b" \
+                        arp operation request \
+                        arp daddr ip 169.254.16.9 \
+                        drop;
                     };
                 };
             NFT
@@ -149,7 +145,7 @@ module VNMMAD
             nft(ERB.new(<<~NFT).result(binding))
                 table bridge one_tproxy {
                     chain ch_<%= brdev %> {
-                        type filter hook prerouting priority dstnat; policy accept;
+                        type filter hook forward priority filter; policy accept;
                     };
                 };
                 delete chain bridge one_tproxy ch_<%= brdev %>;

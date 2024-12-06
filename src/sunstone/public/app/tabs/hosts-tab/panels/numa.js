@@ -116,9 +116,15 @@ define(function(require) {
       node['MEMORY']['FREE'] = monitoring_node['MEMORY']['FREE'];
       node['MEMORY']['USED'] = monitoring_node['MEMORY']['USED'];
 
-      node.HUGEPAGE.forEach(function(page){
-        monitoring_page = monitoring_node.HUGEPAGE.find(function (m_page) {return m_page.SIZE === page.SIZE});
-        page['FREE'] = monitoring_page['FREE'];
+      var hugepages = Array.isArray(node.HUGEPAGE)? node.HUGEPAGE : [node.HUGEPAGE]
+      hugepages.forEach(function(page){
+        if(typeof monitoring_node === 'object' && monitoring_node !== null && monitoring_node.HUGEPAGE){
+          var monitoring_hugepage = Array.isArray(monitoring_node.HUGEPAGE)? monitoring_node.HUGEPAGE : [monitoring_node.HUGEPAGE]
+          monitoring_page = monitoring_hugepage.find(function (m_page) {
+            return typeof m_page === 'object' && m_page !== null && m_page.SIZE === page.SIZE
+          });
+          page['FREE'] = monitoring_page['FREE'];
+        }
       })
     })
 

@@ -280,6 +280,7 @@ ETC_DIRS="$ETC_LOCATION/vmm_exec \
           $ETC_LOCATION/fireedge/provision/providers.d \
           $ETC_LOCATION/fireedge/provision/providers.d-extra \
           $ETC_LOCATION/fireedge/sunstone \
+          $ETC_LOCATION/fireedge/sunstone/profiles \
           $ETC_LOCATION/fireedge/sunstone/admin \
           $ETC_LOCATION/fireedge/sunstone/user \
           $ETC_LOCATION/fireedge/sunstone/groupadmin \
@@ -340,6 +341,7 @@ VAR_DIRS="$VAR_LOCATION/remotes \
           $VAR_LOCATION/remotes/etc \
           $VAR_LOCATION/remotes/etc/tm/fs_lvm \
           $VAR_LOCATION/remotes/etc/tm/ssh \
+          $VAR_LOCATION/remotes/etc/tm/local \
           $VAR_LOCATION/remotes/etc/datastore/fs \
           $VAR_LOCATION/remotes/etc/datastore/ceph \
           $VAR_LOCATION/remotes/etc/im/kvm-probes.d \
@@ -471,6 +473,7 @@ VAR_DIRS="$VAR_LOCATION/remotes \
           $VAR_LOCATION/remotes/tm/fs_lvm_ssh \
           $VAR_LOCATION/remotes/tm/qcow2 \
           $VAR_LOCATION/remotes/tm/ssh \
+          $VAR_LOCATION/remotes/tm/local \
           $VAR_LOCATION/remotes/tm/ceph \
           $VAR_LOCATION/remotes/tm/dev \
           $VAR_LOCATION/remotes/tm/vcenter \
@@ -672,6 +675,7 @@ INSTALL_FILES=(
     TM_FS_LVM_SSH_FILES:$VAR_LOCATION/remotes/tm/fs_lvm_ssh
     TM_QCOW2_FILES:$VAR_LOCATION/remotes/tm/qcow2
     TM_SSH_FILES:$VAR_LOCATION/remotes/tm/ssh
+    TM_LOCAL_FILES:$VAR_LOCATION/remotes/tm/local
     TM_SSH_ETC_FILES:$VAR_LOCATION/remotes/etc/tm/ssh
     TM_CEPH_FILES:$VAR_LOCATION/remotes/tm/ceph
     TM_DEV_FILES:$VAR_LOCATION/remotes/tm/dev
@@ -888,6 +892,7 @@ INSTALL_FIREEDGE_ETC_FILES=(
   FIREEDGE_PROVISION_ETC_PROVIDERS:$ETC_LOCATION/fireedge/provision/providers.d
   FIREEDGE_PROVISION_ETC_PROVIDERS_EXTRA:$ETC_LOCATION/fireedge/provision/providers.d-extra
   FIREEDGE_SUNSTONE_ETC:$ETC_LOCATION/fireedge/sunstone
+  FIREEDGE_SUNSTONE_ETC_PROFILES:$ETC_LOCATION/fireedge/sunstone/profiles
   FIREEDGE_SUNSTONE_ETC_VIEW_ADMIN:$ETC_LOCATION/fireedge/sunstone/admin
   FIREEDGE_SUNSTONE_ETC_VIEW_USER:$ETC_LOCATION/fireedge/sunstone/user
   FIREEDGE_SUNSTONE_ETC_VIEW_CLOUD:$ETC_LOCATION/fireedge/sunstone/cloud
@@ -991,7 +996,6 @@ LIB_FILES=""
 #-------------------------------------------------------------------------------
 
 RUBY_LIB_FILES="src/mad/ruby/ActionManager.rb \
-                src/mad/ruby/CommandManager.rb \
                 src/mad/ruby/OpenNebulaDriver.rb \
                 src/mad/ruby/VirtualMachineDriver.rb \
                 src/mad/ruby/PublicCloudDriver.rb \
@@ -1032,7 +1036,8 @@ REMOTE_FILES="src/vmm_mad/remotes/kvm/vgpu"
 MAD_SH_LIB_FILES="src/mad/sh/scripts_common.sh \
                   src/mad/sh/create_container_image.sh"
 
-MAD_RUBY_LIB_FILES="src/mad/ruby/scripts_common.rb"
+MAD_RUBY_LIB_FILES="src/mad/ruby/DriverLogger.rb \
+                    src/mad/ruby/CommandManager.rb"
 
 #-------------------------------------------------------------------------------
 # Driver executable files, to be installed under $LIB_LOCATION/mads
@@ -1089,7 +1094,6 @@ VMM_EXEC_LIB_VCENTER_FILES="src/vmm_mad/remotes/lib/vcenter_driver/datastore.rb 
                     src/vmm_mad/remotes/lib/vcenter_driver/vm_template.rb \
                     src/vmm_mad/remotes/lib/vcenter_driver/network.rb \
                     src/vmm_mad/remotes/lib/vcenter_driver/vm_folder.rb \
-                    src/vmm_mad/remotes/lib/vcenter_driver/vmm_importer.rb \
                     src/vmm_mad/remotes/lib/vcenter_driver/virtual_machine_device/vm_device.rb \
                     src/vmm_mad/remotes/lib/vcenter_driver/virtual_machine_device/vm_disk.rb \
                     src/vmm_mad/remotes/lib/vcenter_driver/virtual_machine_device/vm_nic.rb \
@@ -1750,6 +1754,7 @@ TM_FILES="src/tm_mad/tm_common.sh"
 
 TM_LIB_FILES="src/tm_mad/lib/kvm.rb \
               src/tm_mad/lib/ceph.rb \
+              src/tm_mad/lib/shell.rb \
               src/tm_mad/lib/tm_action.rb \
               src/tm_mad/lib/backup_qcow2.rb \
               src/tm_mad/lib/datastore.rb \
@@ -1868,6 +1873,31 @@ TM_SSH_FILES="src/tm_mad/ssh/clone \
               src/tm_mad/ssh/postbackup_live \
               src/tm_mad/ssh/postbackup \
               src/tm_mad/ssh/restore"
+
+TM_LOCAL_FILES="src/tm_mad/local/clone \
+                src/tm_mad/local/delete \
+                src/tm_mad/local/ln \
+                src/tm_mad/local/mkswap \
+                src/tm_mad/local/mkimage \
+                src/tm_mad/local/mv \
+                src/tm_mad/local/context \
+                src/tm_mad/local/premigrate \
+                src/tm_mad/local/postmigrate \
+                src/tm_mad/local/failmigrate \
+                src/tm_mad/local/mvds \
+                src/tm_mad/local/snap_create \
+                src/tm_mad/local/snap_create_live \
+                src/tm_mad/local/snap_delete \
+                src/tm_mad/local/snap_revert \
+                src/tm_mad/local/monitor \
+                src/tm_mad/local/monitor_ds \
+                src/tm_mad/local/cpds \
+                src/tm_mad/local/resize \
+                src/tm_mad/local/prebackup_live \
+                src/tm_mad/local/prebackup \
+                src/tm_mad/local/postbackup_live \
+                src/tm_mad/local/postbackup \
+                src/tm_mad/local/restore"
 
 TM_SSH_ETC_FILES="src/tm_mad/ssh/sshrc"
 
@@ -2776,6 +2806,9 @@ FIREEDGE_PROVISION_ETC_PROVIDERS_EXTRA="src/fireedge/etc/provision/providers.d-e
 
 FIREEDGE_SUNSTONE_ETC="src/fireedge/etc/sunstone/sunstone-server.conf \
                        src/fireedge/etc/sunstone/sunstone-views.yaml"
+
+FIREEDGE_SUNSTONE_ETC_PROFILES="src/fireedge/etc/sunstone/profiles/windows_optimized.yaml \
+                                src/fireedge/etc/sunstone/profiles/base.template"
 
 FIREEDGE_SUNSTONE_ETC_VIEW_ADMIN="src/fireedge/etc/sunstone/admin/vm-tab.yaml \
                                 src/fireedge/etc/sunstone/admin/vm-template-tab.yaml \

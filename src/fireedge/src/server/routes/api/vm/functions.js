@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
+const btoa = require('btoa')
 const { createHash, createCipheriv } = require('crypto')
-
 const { defaults, httpCodes } = require('server/utils/constants')
 const {
   httpResponse,
@@ -35,6 +35,8 @@ const {
   defaultCommandVM,
   defaultTypeCrypto,
   defaultHash,
+  keysRDP,
+  keysVNC,
 } = defaults
 
 const appConfig = getSunstoneConfig()
@@ -101,7 +103,7 @@ const generateGuacamoleSession = (
   xmlrpc = defaultEmptyFunction
 ) => {
   const { id: userAuthId } = userData
-  const { id: vmId, type } = params
+  const { id: vmId, type, download } = params
   const ensuredType = `${type}`.toLowerCase()
 
   if (!['vnc', 'ssh', 'rdp'].includes(ensuredType)) {
@@ -146,7 +148,6 @@ const generateGuacamoleSession = (
     }
 
     const connection = {
-      // expiration,
       connection: {
         type: ensuredType,
         settings: {
@@ -159,10 +160,45 @@ const generateGuacamoleSession = (
       },
     }
 
-    const wsToken = JSON.stringify(encryptConnection(connection))
-    const encodedWsToken = Buffer.from(wsToken).toString('base64')
+    if (download) {
+      const contentFile = {
+        ...connection.connection.settings,
+        protocol: ensuredType,
+      }
 
-    res.locals.httpCode = httpResponse(ok, encodedWsToken)
+      const encodedData = btoa(
+        Object.entries(contentFile)
+          .map(([key, value]) => {
+            let rtn
+            const keys = type === 'rdp' ? keysRDP : keysVNC
+            // eslint-disable-next-line no-prototype-builtins
+            if (keys.hasOwnProperty(key)) {
+              const getValue =
+                value !== null && typeof value !== 'undefined'
+                  ? value
+                  : keys[key].value
+              const parseValue =
+                typeof getValue === 'boolean'
+                  ? `${+(keys[key].reverse ? !getValue : getValue)}`
+                  : `${getValue}`
+
+              rtn = `${keys[key].key}${parseValue}`
+            }
+
+            return rtn
+          })
+          .filter(Boolean)
+          .join('\n')
+      )
+
+      res.locals.httpCode = httpResponse(ok, encodedData)
+    } else {
+      const wsToken = JSON.stringify(encryptConnection(connection))
+      const encodedWsToken = Buffer.from(wsToken).toString('base64')
+
+      res.locals.httpCode = httpResponse(ok, encodedWsToken)
+    }
+
     next()
   }
 
@@ -304,7 +340,7 @@ const getRdpSettings = (vmInfo) => {
   config['disable-glyph-caching'] =
     nicWithRdp?.RDP_DISABLE_GLYPH_CACHING?.toLowerCase() === 'yes'
 
-  if (config.username && config.password) config.security = 'nla'
+  if (config.username && config.password) config.security = 'rdp'
 
   return config
 }

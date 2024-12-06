@@ -39,10 +39,9 @@ if ruby_version >= Gem::Version.new('3.0.0')
     gem 'rexml'
 end
 
-gem 'async-io', '= 1.32.1'
-gem 'console', '= 1.15.3'
-gem 'etc'
-gem 'rb-inotify'
+if ruby_version < Gem::Version.new('2.6.0')
+    gem 'unf', '< 0.2.0'
+end
 
 ################################################################################
 # gems groups
@@ -179,4 +178,9 @@ end
 
 group :prometheus do
     gem 'prometheus-client'
+end
+
+group :tproxy do
+    gem 'async-io', '= 1.32.1'
+    gem 'console', '= 1.15.3'
 end
